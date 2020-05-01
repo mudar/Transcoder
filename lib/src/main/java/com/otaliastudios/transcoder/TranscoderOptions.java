@@ -8,6 +8,8 @@ import android.os.Looper;
 import com.otaliastudios.transcoder.engine.TrackType;
 import com.otaliastudios.transcoder.resample.AudioResampler;
 import com.otaliastudios.transcoder.resample.DefaultAudioResampler;
+import com.otaliastudios.transcoder.scale.UpVideoScaler;
+import com.otaliastudios.transcoder.scale.VideoScaler;
 import com.otaliastudios.transcoder.sink.DataSink;
 import com.otaliastudios.transcoder.sink.DefaultDataSink;
 import com.otaliastudios.transcoder.source.DataSource;
@@ -51,6 +53,7 @@ public class TranscoderOptions {
     private TimeInterpolator timeInterpolator;
     private AudioStretcher audioStretcher;
     private AudioResampler audioResampler;
+    private VideoScaler videoScaler;
 
     TranscoderListener listener;
     Handler listenerHandler;
@@ -104,6 +107,11 @@ public class TranscoderOptions {
         return audioResampler;
     }
 
+    @NonNull
+    public VideoScaler getVideoScaler() {
+        return videoScaler;
+    }
+
     public static class Builder {
         private DataSink dataSink;
         private final List<DataSource> audioDataSources = new ArrayList<>();
@@ -117,6 +125,7 @@ public class TranscoderOptions {
         private TimeInterpolator timeInterpolator;
         private AudioStretcher audioStretcher;
         private AudioResampler audioResampler;
+        private VideoScaler videoScaler;
 
         Builder(@NonNull String outPath) {
             this.dataSink = new DefaultDataSink(outPath);
@@ -199,13 +208,13 @@ public class TranscoderOptions {
          * Sets the video output strategy. If absent, this defaults to the 16:9
          * strategy returned by {@link DefaultVideoStrategies#for720x1280()}.
          *
-         * @param trackStrategy the desired strategy
+         * @param videoTrackStrategy the desired strategy
          * @return this for chaining
          */
         @NonNull
         @SuppressWarnings("unused")
-        public Builder setVideoTrackStrategy(@Nullable TrackStrategy trackStrategy) {
-            this.videoTrackStrategy = trackStrategy;
+        public Builder setVideoTrackStrategy(@Nullable TrackStrategy videoTrackStrategy) {
+            this.videoTrackStrategy = videoTrackStrategy;
             return this;
         }
 
@@ -319,6 +328,18 @@ public class TranscoderOptions {
         }
 
         /**
+         * Set an {@link VideoScaler} to change the resolution of the video frames
+         * so that they fit the new resolution
+         *
+         */
+        @NonNull
+        @SuppressWarnings("unused")
+        public Builder setVideoScaler(@NonNull VideoScaler videoScaler) {
+            this.videoScaler = videoScaler;
+            return this;
+        }
+
+        /**
          * Generates muted audio data sources if needed
          * @return The list of audio data sources including the muted sources
          */
@@ -389,6 +410,9 @@ public class TranscoderOptions {
             if (audioResampler == null) {
                 audioResampler = new DefaultAudioResampler();
             }
+            if (videoScaler == null) {
+                videoScaler = new UpVideoScaler();
+            }
             TranscoderOptions options = new TranscoderOptions();
             options.listener = listener;
             options.audioDataSources = buildAudioDataSources();
@@ -402,6 +426,7 @@ public class TranscoderOptions {
             options.timeInterpolator = timeInterpolator;
             options.audioStretcher = audioStretcher;
             options.audioResampler = audioResampler;
+            options.videoScaler = videoScaler;
             return options;
         }
 
